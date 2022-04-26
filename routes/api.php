@@ -3,17 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
-
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -28,8 +17,11 @@ Route::group(['middleware' => 'jwt.verify'], function ()
     Route::post('logout', 'JwtAuthController@logout');
     Route::get('user-info', 'JwtAuthController@get_user');
 
-    Route::get('get-modarator-list', 'CommonController@modaratorList');
-    
+    Route::get('get-admin-list', 'CommonController@adminIUserList');
+
+    Route::post('save-update-property', 'PropertyController@saveOrUpdateProperty');
+    Route::get('property-list', 'PropertyController@PropertyList');
+
     Route::get('dashboard-report', 'ReportController@ReporCount');
     Route::get('report-list', 'ReportController@conditionReporList');
     Route::get('pending-report-list', 'ReportController@pendingConditionReporList');
