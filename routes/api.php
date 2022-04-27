@@ -21,6 +21,13 @@ Route::group(['middleware' => 'jwt.verify'], function ()
 
     Route::post('save-update-property', 'PropertyController@saveOrUpdateProperty');
     Route::get('property-list', 'PropertyController@PropertyList');
+    Route::get('property-dropdown-list', 'PropertyController@PropertyDLList');
+    
+    Route::post('save-update-room', 'PropertyController@saveOrUpdateRoom');
+    Route::get('room-list', 'PropertyController@RoomList');
+
+    Route::post('save-update-tenant', 'PropertyController@saveOrUpdateTenant');
+    Route::get('tenant-list', 'PropertyController@TenantList');
 
     Route::get('dashboard-report', 'ReportController@ReporCount');
     Route::get('report-list', 'ReportController@conditionReporList');

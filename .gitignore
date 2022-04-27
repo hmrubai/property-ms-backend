@@ -11,3 +11,5 @@ Homestead.yaml
 npm-debug.log
 yarn-error.log
 /public/uploads/signatures/*
+public/uploads/property_image/*
+public/uploads/profile_image/*
