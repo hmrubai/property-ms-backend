@@ -25,9 +25,12 @@ Route::group(['middleware' => 'jwt.verify'], function ()
     
     Route::post('save-update-room', 'PropertyController@saveOrUpdateRoom');
     Route::get('room-list', 'PropertyController@RoomList');
+    Route::get('room-list-by-id/{property_id}', 'PropertyController@getRoomListByID');
+    
 
     Route::post('save-update-tenant', 'PropertyController@saveOrUpdateTenant');
     Route::get('tenant-list', 'PropertyController@TenantList');
+    Route::get('tenant-dropdown-list', 'PropertyController@TenantDLList');
 
     Route::get('dashboard-report', 'ReportController@ReporCount');
     Route::get('report-list', 'ReportController@conditionReporList');
@@ -36,6 +39,12 @@ Route::group(['middleware' => 'jwt.verify'], function ()
     Route::get('generate-report-no', 'ReportController@generateReportNo');
     Route::post('save-cr-first-stage', 'ReportController@saveReport');
     Route::post('update-cr-second-stage', 'ReportController@updateCRReport');
+
+    Route::post('save-update-contract', 'ContractController@saveOrUpdateContract');
+    Route::get('contract-list', 'ContractController@ContractList');
+    Route::get('contract-details-by-id/{contract_id}', 'ContractController@ContractDetails');
+
+    Route::get('rent-roll-list', 'ContractController@filterRentRollContractList');
 
     Route::get('report-details-by-id/{report_id}', 'ReportController@reportDetailsById');
 

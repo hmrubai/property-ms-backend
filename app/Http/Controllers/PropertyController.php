@@ -44,7 +44,7 @@ class PropertyController extends Controller
                     "building_structure"    => $formData['building_structure'],
                     "story"                 => $formData['story'],
                     "underground_story"     => $formData['underground_story'],
-                    "date_of_completion"    => $formData['date_of_completion'] ? date("Y-m-d H:i:s", strtotime($formData['date_of_completion'])) : null,
+                    "date_of_completion"    => $formData['date_of_completion'] ? $formData['date_of_completion'] : null,
                     "owner_on_the_registry" => $formData['owner_on_the_registry'],
                     "owner_address"         => $formData['owner_address'],
                     "is_active"             => $formData['is_active']
@@ -106,7 +106,7 @@ class PropertyController extends Controller
     }
 
     public function PropertyDLList(){
-        $list = PropertyMaster::select('id', 'property_name', 'property_name_jp', 'location')->orderby('property_name', 'ASC')->get();
+        $list = PropertyMaster::select('id', 'property_name', 'property_name_jp', 'location', 'gross_floor_area_sm')->orderby('property_name', 'ASC')->get();
         return response()->json(['success' => true, 'data' => $list, 'message' => 'Property List'], 200); 
     }
 
@@ -162,6 +162,20 @@ class PropertyController extends Controller
         return response()->json(['success' => true, 'data' => $list, 'message' => 'Room List'], 200); 
     }
 
+    public function getRoomListByID(Request $request)
+    {
+        $property_id = $request->property_id ? $request->property_id : 0;
+        $list = RoomMaster::select('room_masters.*', 'property_masters.property_name', 'property_masters.property_name_jp')
+        ->leftJoin('property_masters', 'property_masters.id', 'room_masters.property_id')
+        ->when($property_id, function ($query, $property_id) {
+            return $query->where('room_masters.property_id', $property_id);
+        })
+        ->orderby('room_masters.room_number', 'ASC')
+        ->get();
+
+        return response()->json(['success' => true, 'data' => $list, 'message' => 'Room List'], 200); 
+    }
+
     public function saveOrUpdateTenant (Request $request) 
     {
         $formData = json_decode($request->data, true);
@@ -181,7 +195,7 @@ class PropertyController extends Controller
                     "type_of_industry"      => $formData['type_of_industry'],
                     "number_of_employee"    => $formData['number_of_employee'],
                     "representative_name"   => $formData['representative_name'],
-                    "establishment_date"    => $formData['establishment_date'] ? date("Y-m-d H:i:s", strtotime($formData['establishment_date'])) : null,
+                    "establishment_date"    => $formData['establishment_date'] ? $formData['establishment_date'] : null,
                     "market_capitalization" => $formData['market_capitalization'],
                     "revenue"               => $formData['revenue'],
                     "is_active"             => $formData['is_active']
@@ -211,7 +225,7 @@ class PropertyController extends Controller
                         "type_of_industry"      => $formData['type_of_industry'],
                         "number_of_employee"    => $formData['number_of_employee'],
                         "representative_name"   => $formData['representative_name'],
-                        "establishment_date"    => $formData['establishment_date'] ? date("Y-m-d H:i:s", strtotime($formData['establishment_date'])) : null,
+                        "establishment_date"    => $formData['establishment_date'] ? $formData['establishment_date'] : null,
                         "market_capitalization" => $formData['market_capitalization'],
                         "revenue"               => $formData['revenue'],
                         "is_active"             => $formData['is_active']
@@ -238,5 +252,10 @@ class PropertyController extends Controller
         $list = Tenant::orderby('company_name', 'ASC')->get();
 
         return response()->json(['success' => true, 'data' => $list, 'message' => 'Tenant List'], 200); 
+    }
+    
+    public function TenantDLList(){
+        $list = Tenant::select('id', 'company_name', 'company_name_jp', 'email')->orderby('company_name', 'ASC')->get();
+        return response()->json(['success' => true, 'data' => $list, 'message' => 'Property List'], 200); 
     }
 }
