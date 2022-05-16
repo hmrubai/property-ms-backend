@@ -149,7 +149,21 @@ class ContractController extends Controller
 
     public function ContractDetails(Request $request)
     {
-        $data = ContractsMaster::where('id', $request->contract_id)->first();
+        $data = ContractsMaster::select('contracts_masters.*', 
+            'property_masters.property_name', 
+            'property_masters.property_name_jp',
+            'room_masters.room_number',
+            'tenants.company_name',
+            'tenants.company_name_jp',
+            'tenants.email as tenant_email',
+            'tenants.address as tenant_address',
+        )
+        ->leftJoin('property_masters', 'property_masters.id', 'contracts_masters.property_id')
+        ->leftJoin('room_masters', 'room_masters.id', 'contracts_masters.room_id')
+        ->leftJoin('tenants', 'tenants.id', 'contracts_masters.tenant_id')
+        ->where('contracts_masters.id', $request->contract_id)
+        ->first();
+
         return response()->json(['success' => true, 'data' => $data, 'message' => 'Contract Details'], 200); 
     }
 
@@ -157,8 +171,6 @@ class ContractController extends Controller
     {
         $property_id = $request->property_id ? $request->property_id : 0;
         $filter_date = $request->filter_date ? $request->filter_date : 0;
-
-        //return response()->json(['success' => true, 'data' => $filter_date, 'message' => 'Contract List'], 200); 
 
         $list = ContractsMaster::select('contracts_masters.*', 
             'property_masters.property_name', 
@@ -189,6 +201,96 @@ class ContractController extends Controller
         ->get();
 
         return response()->json(['success' => true, 'data' => $list, 'message' => 'Rent Roll List'], 200); 
+    }
+
+    public function filterStackingContractList(Request $request)
+    {
+        $property_id = $request->property_id ? $request->property_id : 0;
+        $filter_date = $request->filter_date ? $request->filter_date : 0;
+        
+        $room_list =  RoomMaster::select('room_masters.*', 'property_masters.property_name', 'property_masters.property_name_jp')
+            ->leftJoin('property_masters', 'property_masters.id', 'room_masters.property_id')
+            ->where('room_masters.property_id', $property_id)
+            ->orderby('room_masters.room_number', 'ASC')
+            ->get();
+        
+        $stacking_list = [];
+        foreach ($room_list as $room) 
+        {
+            $room_id = $room->id;
+            $is_contract_exist = ContractsMaster::select('contracts_masters.*',
+                'tenants.company_name',
+                'tenants.company_name_jp',
+                'tenants.email as tenant_email',
+                'tenants.address as tenant_address',
+            )
+            ->when($room_id, function ($query, $room_id) {
+                return $query->where('contracts_masters.room_id', $room_id);
+            })
+            ->when($filter_date, function ($query, $filter_date) {
+                return $query->whereDate('contracts_masters.date_of_contract_start', '<=', date("Y-m-d", strtotime($filter_date)));
+            })
+            ->when($filter_date, function ($query, $filter_date) {
+                return $query->whereDate('contracts_masters.date_of_contract_end', '>=', date("Y-m-d", strtotime($filter_date)));
+            })
+            ->leftJoin('tenants', 'tenants.id', 'contracts_masters.tenant_id')
+            ->first();
+
+            if(!empty($is_contract_exist)){
+                array_push($stacking_list, [
+                    'room_number' => $room->room_number,
+                    'floor_no' => $room->floor_no,
+                    'room_area_sm' => $room->room_area_sm,
+                    'room_area_tsubo' => $room->room_area_tsubo,
+                    'uses' => $room->uses,
+                    'tenant_name' => $is_contract_exist->company_name,
+                    'tenant_email' => $is_contract_exist->tenant_email,
+                    'tenant_address' => $is_contract_exist->tenant_address,
+                    'date_of_contract_start' => $is_contract_exist->date_of_contract_start,
+                    'date_of_contract_end' => $is_contract_exist->date_of_contract_end,
+                    'is_booked' => true,
+                ]);
+            }else{
+                array_push($stacking_list, [
+                    'room_number' => $room->room_number,
+                    'floor_no' => $room->floor_no,
+                    'room_area_sm' => $room->room_area_sm,
+                    'room_area_tsubo' => $room->room_area_tsubo,
+                    'uses' => $room->uses,
+                    'tenant_name' => null,
+                    'tenant_email' => null,
+                    'tenant_address' => null,
+                    'date_of_contract_start' => null,
+                    'date_of_contract_end' => null,
+                    'is_booked' => false,
+                ]); 
+            }
+        }
+
+        $data = $this->group_by("floor_no", $stacking_list);
+        $response_data = [];
+        foreach ($data as $item) {
+            array_push($response_data,
+                [
+                    'floor_no' => $item[0]['floor_no'],
+                    'rooms' => $item
+                ]);
+        }
+
+        return response()->json(['success' => true, 'data' => $response_data, 'message' => 'Stacking List'], 200); 
+    }
+
+    public function group_by($key, $data) {
+        $result = [];
+    
+        foreach($data as $val) {
+            if(array_key_exists($key, $val)){
+                $result[$val[$key]][] = $val;
+            }else{
+                $result[""][] = $val;
+            }
+        }
+        return $result;
     }
 
 }

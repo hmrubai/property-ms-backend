@@ -45,6 +45,7 @@ Route::group(['middleware' => 'jwt.verify'], function ()
     Route::get('contract-details-by-id/{contract_id}', 'ContractController@ContractDetails');
 
     Route::get('rent-roll-list', 'ContractController@filterRentRollContractList');
+    Route::get('stacking-list', 'ContractController@filterStackingContractList');
 
     Route::get('report-details-by-id/{report_id}', 'ReportController@reportDetailsById');
 

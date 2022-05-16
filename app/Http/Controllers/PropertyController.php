@@ -51,7 +51,7 @@ class PropertyController extends Controller
                 ]);
 
                 if($property_image){
-                    $property->update([
+                    PropertyMaster::where('id', $formData['id'])->update([
                         "property_image" => url('/')."/uploads/property_image/".$property_image
                     ]);
                 }
@@ -202,7 +202,7 @@ class PropertyController extends Controller
                 ]);
 
                 if($profile_image){
-                    $tenant->update([
+                    Tenant::where('id', $formData['id'])->update([
                         "profile_image" => url('/')."/uploads/profile_image/".$profile_image
                     ]);
                 }
